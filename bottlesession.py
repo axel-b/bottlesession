@@ -110,6 +110,22 @@ class PickleSession(BaseSession):
 		os.rename(tmpName, fileName)
 
 
+class MemorySession(BaseSession):
+	'''Class which stores session information in the server memory.
+	'''
+	def __init__(self, *args, **kwargs):
+		super(PickleSession, self).__init__(*args, **kwargs)
+		self.sessions = dict()
+
+	def load(self, sessionid):
+		if not sessionid in self.sessions: return None
+		return self.sessions[sessionid]
+
+	def save(self, data):
+		sessionid = data['sessionid']
+		self.sessions[sessionid] = data
+
+
 class CookieSession(BaseSession):
 	'''Session manager class which stores session in a signed browser cookie.
 
