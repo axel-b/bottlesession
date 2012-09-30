@@ -114,7 +114,7 @@ class MemorySession(BaseSession):
 	'''Class which stores session information in the server memory.
 	'''
 	def __init__(self, *args, **kwargs):
-		super(PickleSession, self).__init__(*args, **kwargs)
+		super(MemorySession, self).__init__(*args, **kwargs)
 		self.sessions = dict()
 
 	def load(self, sessionid):
