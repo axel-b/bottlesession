@@ -9,13 +9,16 @@ from __future__ import with_statement
 import bottle
 
 
-def authenticator(session_manager, login_url = '/auth/login'):
+def authenticator(session_manager, login_url = '/auth/login', login_scheme  = ''):
 	'''Create an authenticator decorator.
 
 	:param session_manager: A session manager class to be used for storing
 			and retrieving session data.  Probably based on :class:`BaseSession`.
 	:param login_url: The URL to redirect to if a login is required.
 			(default: ``'/auth/login'``).
+	:param login_scheme: The URL scheme to use for login_url.
+			When login_scheme is set, we assume that login_url contains only a URL path.
+			(default: unset).
 	'''
 	def valid_user(login_url = login_url):
 		def decorator(handler, *a, **ka):
@@ -26,9 +29,19 @@ def authenticator(session_manager, login_url = '/auth/login'):
 					data = session_manager.get_session()
 					if not data['valid']: raise KeyError('Invalid login')
 				except (KeyError, TypeError):
+					request = bottle.request.fullpath
+					login_redir_url = login_url
+					if login_scheme:
+					    parts = bottle.request.urlparts
+					    # avoid redirecting back to the login screen after succesful login
+					    if parts.path == login_url:
+					        request = login_scheme + '://' + parts.netloc + '/'
+					    else:
+					        request = login_scheme + '://' + parts.netloc + parts.path
+					    login_redir_url = login_scheme + '://' + parts.netloc + login_url
 					bottle.response.set_cookie('validuserloginredirect',
-							bottle.request.fullpath, path = '/')
-					bottle.redirect(login_url)
+							request, path = '/')
+					bottle.redirect(login_redir_url)
 
 				#  set environment
 				if data.get('name'):
